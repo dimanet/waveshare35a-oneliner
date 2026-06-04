@@ -17,13 +17,10 @@ apt-get update
 DEBIAN_FRONTEND=noninteractive apt-get install -y \
   unzip \
   curl \
-  xserver-xorg \
-  xinit \
   xserver-xorg-video-fbdev \
   xserver-xorg-input-evdev \
   xinput-calibrator \
-  lightdm \
-  lxde-core
+  htop
 
 curl -L https://files.waveshare.com/wiki/common/Waveshare35a.zip -o "$WORKDIR/Waveshare35a.zip"
 python3 - <<'PY'
@@ -89,14 +86,30 @@ Section "InputClass"
 EndSection
 EOF
 
-mkdir -p /etc/lightdm/lightdm.conf.d
-cat >/etc/lightdm/lightdm.conf.d/12-autologin.conf <<EOF
-[Seat:*]
-autologin-user=$USER_NAME
-autologin-user-timeout=0
-user-session=LXDE
+mkdir -p /etc/systemd/system/getty@tty1.service.d
+cat >/etc/systemd/system/getty@tty1.service.d/autologin.conf <<EOF
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin $USER_NAME --noclear %I \$TERM
 EOF
 
-systemctl set-default graphical.target
+cat >"$USER_HOME/.bash_profile" <<'EOF'
+if [ "$(tty)" = "/dev/tty1" ]; then
+  while :; do
+    state="$(systemctl is-system-running 2>/dev/null || true)"
+    case "$state" in
+      starting|initializing) sleep 1 ;;
+      *) break ;;
+    esac
+  done
+  exec htop
+fi
+EOF
+chown "$USER_NAME:$USER_NAME" "$USER_HOME/.bash_profile"
+chmod 0644 "$USER_HOME/.bash_profile"
 
-echo "Setup complete. Reboot required."
+systemctl disable lightdm >/dev/null 2>&1 || true
+systemctl set-default multi-user.target
+systemctl daemon-reload
+
+echo "Setup complete. Reboot required. tty1 will autologin and run htop."
