@@ -5,7 +5,7 @@ One-liner installer for Waveshare 3.5inch RPi LCD (A) on Raspberry Pi OS Trixie/
 ## One-liner
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/dimanetz/waveshare35a-oneliner/main/scripts/setup-waveshare35a.sh | sudo bash && sudo reboot
+curl -fsSL https://raw.githubusercontent.com/dimanet/waveshare35a-oneliner/main/scripts/setup-waveshare35a.sh | sudo bash && sudo reboot
 ```
 
 ## What it does
